@@ -10,3 +10,5 @@ add_executable(${PROJECT_NAME}
     src/arena.c
     src/file.c
 )
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)

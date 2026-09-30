@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdalign.h>
+#include <stdint.h>
 
 #include "file.h"
 
@@ -31,11 +32,20 @@ bool file_is_regular(const char *path) {
 }
 
 char *file_read_all(Arena *arena, const char *path, size_t *out_size) {
-	if (!file_is_regular(path)) {
+	struct stat st;
+	if (stat(path, &st) != 0) {
+		fprintf(stderr, "error getting file info: %s\n", path);
+		return NULL;
+	}
+	if (!S_ISREG(st.st_mode)) {
 		fprintf(stderr, "not a regular file: %s\n", path);
 		return NULL;
 	}
-
+	if (st.st_size < 0 || (uintmax_t)st.st_size >= SIZE_MAX) {
+		fprintf(stderr, "file too large to read: %s\n", path);
+		return NULL;
+	}
+	size_t size = (size_t)st.st_size;
 
 	FILE *fp = fopen(path, "rb");
 	if (!fp) {
@@ -43,19 +53,11 @@ char *file_read_all(Arena *arena, const char *path, size_t *out_size) {
 		return NULL;
 	}
 
-	fseek(fp, 0, SEEK_END);
-	long size = ftell(fp);
-	if (size == -1) {
-		fprintf(stderr, "error getting file size\n");
-		fclose(fp);
-		return NULL;
-	}
 	char *output = arena_alloc(arena, size + 1, alignof(char));
-	fseek(fp, 0, SEEK_SET);
 
 	size_t ret = fread(output, 1, size, fp);
-	if (ret != (size_t)size) {
-		fprintf(stderr, "error reading file contents\n");
+	if (ret != size || ferror(fp)) {
+		fprintf(stderr, "error reading file contents: %s\n", path);
 		fclose(fp);
 		return NULL;
 	}
@@ -63,7 +65,7 @@ char *file_read_all(Arena *arena, const char *path, size_t *out_size) {
 	fclose(fp);
 
 	if (out_size) {
-		*out_size = (size_t)size;
+		*out_size = size;
 	}
 
 	return output;

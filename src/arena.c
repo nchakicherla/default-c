@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdalign.h>
+#include <stdlib.h>
 
 #define MEMORY_HOG_FACTOR 1
 #define DEF_BLOCK_SIZE 4096
@@ -79,21 +80,20 @@ int arena_term(Arena *a) {
 
 int arena_reset(Arena *a) { // preserves last_block_size from pre-reset
 
+	ArenaBlock *keep = a->last_block;
 	ArenaBlock *curr = a->first_block;
-	ArenaBlock *next = NULL;
 
-	while(curr) {
-		next = curr->next;
+	while(curr != keep) {
+		ArenaBlock *next = curr->next;
 		free(curr->data);
 		free(curr);
 		curr = next;
 	}
 
-	a->first_block = alloc_init_block(a->last_block_size);
-	a->last_block = a->first_block;
+	a->first_block = keep;
 
-	a->next_free = a->first_block->data;
-	a->next_free_size = a->first_block->data_size;
+	a->next_free = keep->data;
+	a->next_free_size = keep->data_size;
 
 	a->bytes_used = 0;
 	a->bytes_allocd = checked_add_size(checked_add_size(sizeof(Arena), sizeof(ArenaBlock)), a->last_block_size);
@@ -177,7 +177,7 @@ void *arena_grow_alloc_zeroed(void *ptr, size_t old_size, size_t new_size, Arena
 	return output_ptr;
 }
 
-char *arena_new_str(char *str, Arena *a) {
+char *arena_new_str(const char *str, Arena *a) {
 
 	char *output = NULL;
 	size_t len = strlen(str);
