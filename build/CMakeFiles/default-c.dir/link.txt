@@ -1,0 +1,1 @@
+/usr/bin/cc -Wl,--dependency-file=CMakeFiles/default-c.dir/link.d "CMakeFiles/default-c.dir/src/main.c.o" "CMakeFiles/default-c.dir/src/arena.c.o" "CMakeFiles/default-c.dir/src/file.c.o" -o default-c

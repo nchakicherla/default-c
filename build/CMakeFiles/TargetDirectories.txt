@@ -1,0 +1,3 @@
+/home/naveen/Code/default-c/build/CMakeFiles/default-c.dir
+/home/naveen/Code/default-c/build/CMakeFiles/edit_cache.dir
+/home/naveen/Code/default-c/build/CMakeFiles/rebuild_cache.dir
