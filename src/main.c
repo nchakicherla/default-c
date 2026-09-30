@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdalign.h>
 
 #include "arena.h"
 
